@@ -1,5 +1,6 @@
 package com.samuel23taku.urlshortener.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samuel23taku.urlshortener.model.UrlModel;
 import com.samuel23taku.urlshortener.repository.UrlShortenerRepository;
@@ -50,8 +51,11 @@ public class ShortenerService {
     private UrlModel getLongUrlFromRedis(String shortenedUrl) {
         try {
             String json = redisTemplate.opsForValue().get(shortenedUrl);
+            UrlModel res = objectMapper.readValue(json, new TypeReference<UrlModel>() {
+            });
             System.out.println("Shortened Url is " + json);
-            return new UrlModel("id", "oringla", "shorted", "created data");
+            return res;
+//            return new UrlModel("id", "oringla", "shorted", "created data");
         } catch (Exception e) {
             return null;
         }
