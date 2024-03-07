@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/link_shortened")
+@RequestMapping("/link_shortener")
 public class MainController {
     final
     ShortenerService shortenerService;
@@ -28,7 +28,9 @@ public class MainController {
     @GetMapping("/getLongUrl")
 //    Get long Url from short url
     public ResponseEntity getLongUrlFromShort(@RequestParam String shortUrl){
+        System.out.println("Url is "+shortUrl);
         if (shortUrl == null) {
+//            Todo (If value doesn't exist in Db tell a user about creating a new one)
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing parameters");
         }
         return ResponseEntity.status(HttpStatus.OK).body(shortenerService.getOriginalUrl(shortUrl));

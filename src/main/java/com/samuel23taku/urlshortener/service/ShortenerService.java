@@ -37,15 +37,17 @@ public class ShortenerService {
     }
 
     //    If url doesn't exist in db create one
-    public UrlModel getOriginalUrl(String url) {
-        UrlModel urlModel = getLongUrlFromRedis(url);
+    public UrlModel getOriginalUrl(String shortUrl) {
+        UrlModel urlModel = getLongUrlFromRedis(shortUrl);
         if (urlModel != null) {
             return urlModel;
         }
-        urlModel = urlShortenerRepository.findById(url).get();
-//        Cache the result in redis for future use
-        cacheUrlInRedis(urlModel);
-        return urlModel;
+
+        var value = urlShortenerRepository.findById(shortUrl);
+        System.out.println("value is "+value);
+////        Cache the result in redis for future use
+        cacheUrlInRedis(value.get());
+        return value.get();
     }
 
     private UrlModel getLongUrlFromRedis(String shortenedUrl) {
@@ -78,8 +80,8 @@ public class ShortenerService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd"); // Specify the desired format
 
         String formattedDate = currentDate.format(formatter);
-
-        UrlModel urlModel = new UrlModel(null, url, "/link_shortened/" + Math.random(), formattedDate);
-        return urlModel;
+        String newLink = "new_link"+Math.random();
+//        I'm using the new link as an id
+        return new UrlModel(newLink, url,  newLink, formattedDate);
     }
 }
