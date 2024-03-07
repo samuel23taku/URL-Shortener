@@ -26,7 +26,7 @@ public class ShortenerService {
     public UrlModel generateUrlAndReturn(String originalUrl) {
         UrlModel existingUrl = urlShortenerRepository.findExistingOriginalUrl(originalUrl);
         if (existingUrl != null) {
-//            If it exists in the DB return it 
+//            If it exists in the DB return it
             return existingUrl;
         }
 //            If it doesn't exist in the DB create a new one
