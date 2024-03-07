@@ -1,24 +1,19 @@
 package com.samuel23taku.urlshortener.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samuel23taku.urlshortener.model.UrlModel;
 import com.samuel23taku.urlshortener.repository.UrlShortenerRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 
 @Component
 public class ShortenerService {
-    final
-    UrlShortenerRepository urlShortenerRepository;
+    final UrlShortenerRepository urlShortenerRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
 
@@ -28,27 +23,41 @@ public class ShortenerService {
         this.objectMapper = objectMapper;
     }
 
-    public UrlModel generateUrlAndReturn(String originalUrl){
-
-
+    public UrlModel generateUrlAndReturn(String originalUrl) {
+        UrlModel existingUrl = urlShortenerRepository.findExistingOriginalUrl(originalUrl);
+        if (existingUrl != null) {
+//            If it exists in the DB return it 
+            return existingUrl;
+        }
+//            If it doesn't exist in the DB create a new one
+        UrlModel generatedUrlModel = utilGenerateUrl(originalUrl);
+        urlShortenerRepository.insert(generatedUrlModel);
+        return generatedUrlModel;
     }
 
-//    If url doesn't exist in db create one
-    public UrlModel getOriginalUrl(String url){
-
+    //    If url doesn't exist in db create one
+    public UrlModel getOriginalUrl(String url) {
+        UrlModel urlModel = getLongUrlFromRedis(url);
+        if (urlModel != null) {
+            return urlModel;
+        }
+        urlModel = urlShortenerRepository.findById(url).get();
+//        Cache the result in redis for future use
+        cacheUrlInRedis(urlModel);
+        return urlModel;
     }
 
     private UrlModel getLongUrlFromRedis(String shortenedUrl) {
         try {
             String json = redisTemplate.opsForValue().get(shortenedUrl);
-            System.out.println("Shortened Url is "+json);
-            return new UrlModel("id","oringla","shorted","created data");
+            System.out.println("Shortened Url is " + json);
+            return new UrlModel("id", "oringla", "shorted", "created data");
         } catch (Exception e) {
             return null;
         }
     }
 
-    private void cacheUrlInRedis(UrlModel model){
+    private void cacheUrlInRedis(UrlModel model) {
         try {
             long ttlInHours = 1;
             String mappedUrlModel = objectMapper.writeValueAsString(model);
@@ -60,4 +69,13 @@ public class ShortenerService {
         }
     }
 
+    private UrlModel utilGenerateUrl(String url) {
+        LocalDate currentDate = LocalDate.now(); // Get the current date
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd"); // Specify the desired format
+
+        String formattedDate = currentDate.format(formatter);
+
+        UrlModel urlModel = new UrlModel(null, url, "/link_shortened/" + Math.random(), formattedDate);
+        return urlModel;
+    }
 }
