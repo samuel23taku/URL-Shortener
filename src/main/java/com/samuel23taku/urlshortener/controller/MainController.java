@@ -19,7 +19,8 @@ public class MainController {
     }
 
     @PostMapping("/createShortUrl")
-    public ResponseEntity createShortUrl(String longUrl){
+    public ResponseEntity createShortUrl(@RequestBody String longUrl){
+        System.out.println("Long url is "+longUrl);
         if (longUrl == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing parameters");
         }
